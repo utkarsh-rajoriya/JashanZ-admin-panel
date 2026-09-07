@@ -71,6 +71,29 @@ function RootRedirect() {
   return <Navigate to="/admin/login" replace />;
 }
 
+// All 4 portal subdomains (admin/support/finance/admanager) currently share
+// the same EC2 Nginx dist/ build (see the repo's DEPLOYMENT.md) — the app
+// itself has to decide which portal's login page to land on based on which
+// hostname the browser actually loaded, since there's no separate build per
+// subdomain to encode that at the server/Nginx level.
+function RootRedirect() {
+  const hostname = window.location.hostname
+
+  if (hostname === 'support.jashanz.com') {
+    return <Navigate to="/support/login" replace />
+  }
+
+  if (hostname === 'finance.jashanz.com') {
+    return <Navigate to="/finance/login" replace />
+  }
+
+  if (hostname === 'admanager.jashanz.com') {
+    return <Navigate to="/admanager/login" replace />
+  }
+
+  return <Navigate to="/admin/login" replace />
+}
+
 function AppRoutes() {
   const { auth: adminAuth } = useAdminAuth();
   const { auth: financeAuth } = useFinanceAuth();

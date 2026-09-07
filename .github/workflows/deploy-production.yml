@@ -44,17 +44,38 @@ jobs:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Sync dist/ to S3
+      - name: Deploy to EC2 using SSM
+        shell: bash
         run: |
-          aws s3 sync dist/ "s3://${{ vars.S3_BUCKET_ADMIN }}" \
-            --delete \
-            --cache-control "public,max-age=31536000,immutable" \
-            --exclude "index.html"
-          aws s3 cp dist/index.html "s3://${{ vars.S3_BUCKET_ADMIN }}/index.html" \
-            --cache-control "public,max-age=0,must-revalidate"
+          set -euo pipefail
 
-      - name: Invalidate CloudFront cache
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ vars.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "JashanZ Admin deployment - $GITHUB_SHA" \
+            --parameters 'commands=[
+              "set -e",
+              "runuser -u jashanz -- bash -lc '\''cd /var/www/jashanz-admin/JashanZ-admin-panel-FromUtkarsh && git fetch origin main && git checkout main && git reset --hard origin/main && npx -y npm@11.6.1 ci && VITE_API_URL=https://api.jashanz.com/api/v1 npx -y npm@11.6.1 run build'\''",
+              "test -f /var/www/jashanz-admin/JashanZ-admin-panel-FromUtkarsh/dist/index.html",
+              "curl -fsS https://admin.jashanz.com/ > /dev/null"
+            ]' \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "SSM Command ID: $COMMAND_ID"
+          echo "Waiting for deployment to finish..."
+
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ vars.EC2_INSTANCE_ID }}"
+
+          echo "Deployment completed successfully."
+
+      - name: Verify Admin Portal
         run: |
-          aws cloudfront create-invalidation \
-            --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID_ADMIN }}" \
-            --paths "/*"
+          set -euo pipefail
+
+          echo "Checking https://admin.jashanz.com"
+          curl -fsSI https://admin.jashanz.com
+
+          echo "Admin deployment successful."
