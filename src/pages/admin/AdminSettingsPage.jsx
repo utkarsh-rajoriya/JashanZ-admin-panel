@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { ApiError } from '../../api/client'
+import { getAllConfig, setConfig, PLATFORM_INFO_KEYS } from '../../api/config'
 
 /* ── Mock data ── */
 const CATEGORIES_WITH_RATES = [
@@ -13,14 +15,6 @@ const CATEGORIES_WITH_RATES = [
 ]
 
 const BOOKING_TYPES = ['Slot Booking', 'Per Day Booking', 'Ticket Booking', 'Appointment Booking', 'Home Service Booking']
-
-const MOCK_VENDORS = [
-  'Royal Palace Banquet (BUS1001)',
-  'Groove Masters DJ (BUS1002)',
-  'Dream Decors (BUS1003)',
-  'Glam Studio (BUS1004)',
-  'Click Perfect Photography (BUS1005)',
-]
 
 const TABS = ['General', 'Commission', 'Notifications']
 
@@ -65,81 +59,73 @@ function Card({ title, desc, children }) {
   )
 }
 
-/* ── General Tab ── */
-function GeneralTab() {
-  const [platform, setPlatform] = useState({ name: 'Jashanz', email: 'support@jashanz.in', phone: '+91 98765 43210', website: 'https://www.jashanz.in' })
-  const [session, setSession] = useState({ timeout: '1 hr', maxAttempts: '5', lockDuration: '30 min' })
-  const [credit, setCredit] = useState({ vendor: '', amount: '', note: '' })
-  const [saved, setSaved] = useState(false)
+/* ── General Tab ──
+   Backed by the generic AdminConfig key/value store (GET/POST /admin/config) —
+   the same store Commission rate, free inquiry limit, etc. already use.
+   Keys: platformName, supportEmail, supportPhone, websiteUrl. */
+const EMPTY_PLATFORM = { platformName: '', supportEmail: '', supportPhone: '', websiteUrl: '' }
 
-  const handleSave = e => { e.preventDefault(); setSaved(true); setTimeout(() => setSaved(false), 2000) }
-  const handleCredit = e => { e.preventDefault(); alert(`Credit of ₹${credit.amount} sent to ${credit.vendor}`); setCredit({ vendor: '', amount: '', note: '' }) }
+function GeneralTab() {
+  const [platform, setPlatform] = useState(EMPTY_PLATFORM)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    getAllConfig()
+      .then(data => {
+        if (cancelled) return
+        const byKey = Object.fromEntries((data?.configs || []).map(c => [c.key, c.value]))
+        setPlatform({
+          platformName: byKey.platformName ?? '',
+          supportEmail: byKey.supportEmail ?? '',
+          supportPhone: byKey.supportPhone ?? '',
+          websiteUrl: byKey.websiteUrl ?? '',
+        })
+      })
+      .catch(err => !cancelled && setError(err instanceof ApiError ? err.message : 'Could not load platform settings.'))
+      .finally(() => !cancelled && setLoading(false))
+    return () => { cancelled = true }
+  }, [])
+
+  const handleSave = async e => {
+    e.preventDefault()
+    setSaving(true)
+    setError('')
+    try {
+      // One request per key — setConfig upserts a single { key, value } pair.
+      await Promise.all(PLATFORM_INFO_KEYS.map(key => setConfig(key, platform[key])))
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not save platform settings.')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <form onSubmit={handleSave} className="space-y-4">
-      {/* Platform Info */}
       <Card title="Platform Information" desc="Basic contact and branding details">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div><Label>Platform Name</Label><input className={inputCls} value={platform.name} onChange={e => setPlatform(p => ({ ...p, name: e.target.value }))} /></div>
-          <div><Label>Support Email</Label><input type="email" className={inputCls} value={platform.email} onChange={e => setPlatform(p => ({ ...p, email: e.target.value }))} /></div>
-          <div><Label>Support Phone</Label><input className={inputCls} value={platform.phone} onChange={e => setPlatform(p => ({ ...p, phone: e.target.value }))} /></div>
-          <div><Label>Website URL</Label><input type="url" className={inputCls} value={platform.website} onChange={e => setPlatform(p => ({ ...p, website: e.target.value }))} /></div>
-        </div>
+        {loading ? (
+          <p className="text-sm text-slate-400">Loading…</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div><Label>Platform Name</Label><input className={inputCls} value={platform.platformName} onChange={e => setPlatform(p => ({ ...p, platformName: e.target.value }))} /></div>
+            <div><Label>Support Email</Label><input type="email" className={inputCls} value={platform.supportEmail} onChange={e => setPlatform(p => ({ ...p, supportEmail: e.target.value }))} /></div>
+            <div><Label>Support Phone</Label><input className={inputCls} value={platform.supportPhone} onChange={e => setPlatform(p => ({ ...p, supportPhone: e.target.value }))} /></div>
+            <div><Label>Website URL</Label><input type="url" className={inputCls} value={platform.websiteUrl} onChange={e => setPlatform(p => ({ ...p, websiteUrl: e.target.value }))} /></div>
+          </div>
+        )}
       </Card>
 
-      {/* Session Settings */}
-      <Card title="Session Settings" desc="Control login security and timeout behaviour">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <Label>Session Timeout</Label>
-            <select className={inputCls} value={session.timeout} onChange={e => setSession(s => ({ ...s, timeout: e.target.value }))}>
-              {['30 min', '1 hr', '2 hr', '4 hr'].map(o => <option key={o}>{o}</option>)}
-            </select>
-          </div>
-          <div>
-            <Label>Max Login Attempts</Label>
-            <select className={inputCls} value={session.maxAttempts} onChange={e => setSession(s => ({ ...s, maxAttempts: e.target.value }))}>
-              {['3', '5', '10'].map(o => <option key={o}>{o}</option>)}
-            </select>
-          </div>
-          <div>
-            <Label>Account Lock Duration</Label>
-            <select className={inputCls} value={session.lockDuration} onChange={e => setSession(s => ({ ...s, lockDuration: e.target.value }))}>
-              {['15 min', '30 min', '1 hr'].map(o => <option key={o}>{o}</option>)}
-            </select>
-          </div>
-        </div>
-      </Card>
-
-      {/* Credit to Vendor */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-5">
-        <h3 className="font-black text-slate-800 text-sm mb-0.5">Credit Amount to Vendor</h3>
-        <p className="text-xs text-slate-400 mb-4">Manually credit balance to a vendor wallet</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <div>
-            <Label>Select Vendor</Label>
-            <select className={inputCls} value={credit.vendor} onChange={e => setCredit(c => ({ ...c, vendor: e.target.value }))}>
-              <option value="">Choose vendor...</option>
-              {MOCK_VENDORS.map(v => <option key={v}>{v}</option>)}
-            </select>
-          </div>
-          <div>
-            <Label>Amount (₹)</Label>
-            <input type="number" min="1" placeholder="e.g. 5000" className={inputCls} value={credit.amount} onChange={e => setCredit(c => ({ ...c, amount: e.target.value }))} />
-          </div>
-        </div>
-        <div className="mb-4">
-          <Label>Note / Reason</Label>
-          <textarea rows={2} placeholder="Reason for credit..." className={`${inputCls} resize-none`} value={credit.note} onChange={e => setCredit(c => ({ ...c, note: e.target.value }))} />
-        </div>
-        <button type="button" onClick={handleCredit} disabled={!credit.vendor || !credit.amount} className="bg-brand text-white rounded-xl px-5 py-2.5 text-sm font-bold hover:bg-brand/90 disabled:opacity-40 transition-opacity">
-          Credit Now
-        </button>
-      </div>
+      {error && <p className="text-sm text-danger font-semibold">{error}</p>}
 
       <div className="flex justify-end">
-        <button type="submit" className="bg-brand text-white rounded-xl px-5 py-2.5 text-sm font-bold flex items-center gap-2 hover:bg-brand/90">
-          <IconSave />{saved ? 'Saved!' : 'Save Changes'}
+        <button type="submit" disabled={loading || saving} className="bg-brand text-white rounded-xl px-5 py-2.5 text-sm font-bold flex items-center gap-2 hover:bg-brand/90 disabled:opacity-40">
+          <IconSave />{saving ? 'Saving…' : saved ? 'Saved!' : 'Save Changes'}
         </button>
       </div>
     </form>

@@ -31,13 +31,6 @@ function CreatorDetailModal({ creator, onClose, onVerify, actionError, onStatsSa
   const [savingStats, setSavingStats] = useState(false)
   const [statsError, setStatsError] = useState('')
 
-  useEffect(() => {
-    setStatsForm({
-      instagramFollowers: creator.instagramFollowers ?? 0,
-      youtubeSubscribers: creator.youtubeSubscribers ?? 0,
-    })
-  }, [creator._id, creator.instagramFollowers, creator.youtubeSubscribers])
-
   const handleVerify = async (status) => {
     setActionLoading(true)
     try {
@@ -212,9 +205,7 @@ export default function CreatorsPage() {
       .finally(() => setLoading(false))
   }, [page, statusFilter])
 
-  useEffect(() => { loadCreators() }, [loadCreators])
-
-  useEffect(() => { setPage(1) }, [statusFilter])
+  useEffect(() => { (async () => { await loadCreators() })() }, [loadCreators])
 
   const handleVerify = async (creatorId, status) => {
     setActionError('')
@@ -285,7 +276,7 @@ export default function CreatorsPage() {
 
       {/* Filter bar */}
       <div className="bg-white rounded-2xl border border-slate-100 p-4 flex flex-wrap gap-3">
-        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }}>
           <option value="">All Statuses</option>
           {STATUSES_LIST.map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
         </select>
@@ -353,7 +344,16 @@ export default function CreatorsPage() {
         </div>
       </div>
 
-      {viewCreator && <CreatorDetailModal creator={viewCreator} onClose={() => { setViewCreator(null); setActionError('') }} onVerify={handleVerify} actionError={actionError} onStatsSaved={handleStatsSaved} />}
+      {viewCreator && (
+        <CreatorDetailModal
+          key={`${viewCreator._id}-${viewCreator.instagramFollowers}-${viewCreator.youtubeSubscribers}`}
+          creator={viewCreator}
+          onClose={() => { setViewCreator(null); setActionError('') }}
+          onVerify={handleVerify}
+          actionError={actionError}
+          onStatsSaved={handleStatsSaved}
+        />
+      )}
 
       {deleteCreatorTarget && (
         <ConfirmDialog

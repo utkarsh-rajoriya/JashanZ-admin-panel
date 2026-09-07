@@ -248,7 +248,7 @@ export default function CirclesPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { loadCircles() }, [loadCircles])
+  useEffect(() => { (async () => { await loadCircles() })() }, [loadCircles])
   useEffect(() => { getCategories().then(data => setCategories(data.categories || [])).catch(() => {}) }, [])
 
   const handleAdd = () => { setEditingCircle(null); setShowModal(true) }

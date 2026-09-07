@@ -41,11 +41,17 @@ function BusinessDetailModal({ biz, onClose, onVerify }) {
 
   useEffect(() => {
     if (tab !== 'Bookings') return
-    setBookingsLoading(true)
-    getBusinessBookings(biz._id, { limit: 20 })
-      .then(data => setBookings(data.items || []))
-      .catch(() => setBookings([]))
-      .finally(() => setBookingsLoading(false))
+    (async () => {
+      setBookingsLoading(true)
+      try {
+        const data = await getBusinessBookings(biz._id, { limit: 20 })
+        setBookings(data.items || [])
+      } catch {
+        setBookings([])
+      } finally {
+        setBookingsLoading(false)
+      }
+    })()
   }, [tab, biz._id])
 
   const handleVerify = async (status) => {
@@ -234,7 +240,10 @@ export default function BusinessesPage() {
   const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 350)
+    const t = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 350)
     return () => clearTimeout(t)
   }, [search])
 
@@ -260,9 +269,7 @@ export default function BusinessesPage() {
       .finally(() => setLoading(false))
   }, [page, debouncedSearch, catFilter, statusFilter])
 
-  useEffect(() => { loadBusinesses() }, [loadBusinesses])
-
-  useEffect(() => { setPage(1) }, [debouncedSearch, catFilter, statusFilter])
+  useEffect(() => { (async () => { await loadBusinesses() })() }, [loadBusinesses])
 
   const handleVerify = async (businessId, status) => {
     await verifyBusiness(businessId, status)
@@ -328,11 +335,11 @@ export default function BusinessesPage() {
           placeholder="Search by username or phone..."
           value={search} onChange={e => setSearch(e.target.value)}
         />
-        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={catFilter} onChange={e => setCatFilter(e.target.value)}>
+        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={catFilter} onChange={e => { setCatFilter(e.target.value); setPage(1) }}>
           <option value="">All Categories</option>
           {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
         </select>
-        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }}>
           <option value="">All Statuses</option>
           {STATUSES_LIST.map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
         </select>

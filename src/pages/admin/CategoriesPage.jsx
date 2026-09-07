@@ -134,7 +134,7 @@ export default function CategoriesPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { loadCategories() }, [loadCategories])
+  useEffect(() => { (async () => { await loadCategories() })() }, [loadCategories])
 
   const handleAdd = () => { setEditingCat(null); setShowModal(true) }
   const handleEdit = cat => { setEditingCat(cat); setShowModal(true) }

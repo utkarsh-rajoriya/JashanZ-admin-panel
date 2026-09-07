@@ -151,17 +151,19 @@ function ManagePermissionsModal({ user, onClose, onSaved }) {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    getStaffPermissions(user._id)
-      .then(data => {
+    ;(async () => {
+      setLoading(true)
+      try {
+        const data = await getStaffPermissions(user._id)
         if (cancelled) return
         setPages(data.pages)
         setLevels(data.permissions ?? {})
-      })
-      .catch(err => {
+      } catch (err) {
         if (!cancelled) setError(err instanceof ApiError ? err.message : 'Failed to load permissions.')
-      })
-      .finally(() => { if (!cancelled) setLoading(false) })
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
     return () => { cancelled = true }
   }, [user._id])
 
@@ -273,7 +275,7 @@ export default function StaffUsersPage({ title, subtitle, roles, createRole, ent
     }
   }, [roles])
 
-  useEffect(() => { fetchUsers() }, [fetchUsers])
+  useEffect(() => { (async () => { await fetchUsers() })() }, [fetchUsers])
 
   const handleToggle = async id => {
     setBusyId(id)

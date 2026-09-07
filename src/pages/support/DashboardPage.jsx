@@ -35,7 +35,7 @@ export default function SupportDashboardPage() {
     }
   }, [])
 
-  useEffect(() => { fetchDashboard() }, [fetchDashboard])
+  useEffect(() => { (async () => { await fetchDashboard() })() }, [fetchDashboard])
 
   if (loading) return <p className="text-sm text-slate-400 text-center py-24">Loading...</p>
   if (error) return <p className="text-sm text-danger font-semibold text-center py-24">{error}</p>

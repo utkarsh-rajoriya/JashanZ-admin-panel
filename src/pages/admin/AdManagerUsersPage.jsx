@@ -78,8 +78,7 @@ export default function AdManagerUsersPage() {
       .finally(() => setLoading(false))
   }, [page, statusFilter])
 
-  useEffect(() => { load() }, [load])
-  useEffect(() => { setPage(1) }, [statusFilter])
+  useEffect(() => { (async () => { await load() })() }, [load])
 
   const handleApprove = async (accessId) => {
     setActionId(accessId)
@@ -150,7 +149,7 @@ export default function AdManagerUsersPage() {
         <select
           className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20"
           value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
+          onChange={e => { setStatusFilter(e.target.value); setPage(1) }}
         >
           <option value="">All Statuses</option>
           <option value="PENDING">Pending</option>

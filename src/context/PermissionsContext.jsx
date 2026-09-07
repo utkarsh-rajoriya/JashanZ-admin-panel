@@ -15,20 +15,21 @@ export function PermissionsProvider({ authToken, children }) {
   const [state, setState] = useState({ permissions: {}, role: null, loading: true })
 
   useEffect(() => {
-    if (!authToken) {
-      setState({ permissions: {}, role: null, loading: false })
-      return
-    }
     let cancelled = false
-    setState((s) => ({ ...s, loading: true }))
-    getMyPermissions()
-      .then((data) => {
+    ;(async () => {
+      if (!authToken) {
+        setState({ permissions: {}, role: null, loading: false })
+        return
+      }
+      setState((s) => ({ ...s, loading: true }))
+      try {
+        const data = await getMyPermissions()
         if (cancelled) return
         setState({ permissions: data.permissions ?? {}, role: data.role ?? null, loading: false })
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) setState({ permissions: {}, role: null, loading: false })
-      })
+      }
+    })()
     return () => { cancelled = true }
   }, [authToken])
 

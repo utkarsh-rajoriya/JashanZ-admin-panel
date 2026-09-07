@@ -15,9 +15,8 @@ concurrency:
 
 jobs:
   ci:
-    name: Test & Build
+    name: Build
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,19 +24,14 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "22"
           cache: "npm"
-
-      - name: Set up npm
-        run: npm install -g npm@11.6.1
 
       - name: Install dependencies
         run: npm ci
 
-      # - name: Lint
-      #   run: npm run lint
+      # Lint step removed for now — 5 pre-existing react-refresh/only-export-components
+      # errors in context files block it. Re-add once those are fixed.
 
       - name: Build
         run: npm run build
-        env:
-          VITE_API_URL: https://api.jashanz.com/api/v1

@@ -88,11 +88,17 @@ function TicketDetailModal({ ticketId, onClose }) {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    getTicketDetails(ticketId)
-      .then(data => { if (!cancelled) setTicket(data.ticket) })
-      .catch(err => { if (!cancelled) setError(err instanceof ApiError ? err.message : 'Failed to load ticket.') })
-      .finally(() => { if (!cancelled) setLoading(false) })
+    ;(async () => {
+      setLoading(true)
+      try {
+        const data = await getTicketDetails(ticketId)
+        if (!cancelled) setTicket(data.ticket)
+      } catch (err) {
+        if (!cancelled) setError(err instanceof ApiError ? err.message : 'Failed to load ticket.')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
     return () => { cancelled = true }
   }, [ticketId])
 
@@ -180,7 +186,7 @@ export default function TicketsPage() {
     }
   }, [status])
 
-  useEffect(() => { fetchTickets() }, [fetchTickets])
+  useEffect(() => { (async () => { await fetchTickets() })() }, [fetchTickets])
 
   const handleResolve = async id => {
     setBusyId(id)

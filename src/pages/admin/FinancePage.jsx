@@ -54,7 +54,7 @@ function DashboardTab() {
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { (async () => { await load() })() }, [load])
   useEffect(() => { getBusinesses({ limit: 200 }).then(data => setBusinesses(data.items || [])).catch(() => {}) }, [])
 
   const handleCredit = async () => {
@@ -140,8 +140,7 @@ function VendorPaymentsTab() {
       .finally(() => setLoading(false))
   }, [page, status])
 
-  useEffect(() => { load() }, [load])
-  useEffect(() => { setPage(1) }, [status])
+  useEffect(() => { (async () => { await load() })() }, [load])
 
   const handleToggle = async (businessId, current) => {
     const prev = items
@@ -157,7 +156,7 @@ function VendorPaymentsTab() {
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-2xl border border-slate-100 p-4 flex flex-wrap gap-3">
-        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={status} onChange={e => setStatus(e.target.value)}>
+        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={status} onChange={e => { setStatus(e.target.value); setPage(1) }}>
           <option value="">All Registration Statuses</option>
           <option value="PAID">Paid</option>
           <option value="UNPAID">Unpaid</option>
@@ -229,8 +228,7 @@ function CommissionsTab() {
       .finally(() => setLoading(false))
   }, [page, status])
 
-  useEffect(() => { load() }, [load])
-  useEffect(() => { setPage(1) }, [status])
+  useEffect(() => { (async () => { await load() })() }, [load])
 
   const handleStatusChange = async (id, newStatus) => {
     const prev = items
@@ -258,7 +256,7 @@ function CommissionsTab() {
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-2xl border border-slate-100 p-4 flex flex-wrap gap-3">
-        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={status} onChange={e => setStatus(e.target.value)}>
+        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={status} onChange={e => { setStatus(e.target.value); setPage(1) }}>
           <option value="">All Statuses</option>
           <option value="PENDING">Pending</option>
           <option value="SETTLED">Settled</option>
@@ -340,8 +338,7 @@ function SettlementsTab() {
       .finally(() => setLoading(false))
   }, [page, status])
 
-  useEffect(() => { load() }, [load])
-  useEffect(() => { setPage(1) }, [status])
+  useEffect(() => { (async () => { await load() })() }, [load])
   useEffect(() => { getBusinesses({ limit: 200 }).then(data => setBusinesses(data.items || [])).catch(() => {}) }, [])
 
   const handleCreate = async () => {
@@ -382,7 +379,7 @@ function SettlementsTab() {
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-2xl border border-slate-100 p-4 flex flex-wrap items-center gap-3">
-        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={status} onChange={e => setStatus(e.target.value)}>
+        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={status} onChange={e => { setStatus(e.target.value); setPage(1) }}>
           <option value="">All Statuses</option>
           <option value="QUEUED">Queued</option>
           <option value="PROCESSING">Processing</option>
@@ -467,8 +464,7 @@ function TransactionsTab() {
       .finally(() => setLoading(false))
   }, [page, type])
 
-  useEffect(() => { load() }, [load])
-  useEffect(() => { setPage(1) }, [type])
+  useEffect(() => { (async () => { await load() })() }, [load])
 
   return (
     <div className="space-y-4">
@@ -477,7 +473,7 @@ function TransactionsTab() {
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-100 p-4 flex flex-wrap gap-3">
-        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={type} onChange={e => setType(e.target.value)}>
+        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={type} onChange={e => { setType(e.target.value); setPage(1) }}>
           <option value="">All Types</option>
           <option value="CREDIT_PURCHASE">Credit Purchase</option>
           <option value="CREDIT_REFERRAL">Credit Referral</option>
@@ -538,7 +534,7 @@ function LeadRechargesTab() {
       .finally(() => setLoading(false))
   }, [page])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { (async () => { await load() })() }, [load])
 
   return (
     <div className="space-y-4">

@@ -48,7 +48,10 @@ export default function AuditLogsPage() {
   const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 350)
+    const t = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 350)
     return () => clearTimeout(t)
   }, [search])
 
@@ -65,14 +68,14 @@ export default function AuditLogsPage() {
       .finally(() => setLoading(false))
   }, [page, moduleFilter, roleFilter, debouncedSearch, dateFilter])
 
-  useEffect(() => { load() }, [load])
-  useEffect(() => { setPage(1) }, [moduleFilter, roleFilter, debouncedSearch, dateFilter])
+  useEffect(() => { (async () => { await load() })() }, [load])
 
   const clearFilters = () => {
     setSearch('')
     setModuleFilter('')
     setRoleFilter('')
     setDateFilter('')
+    setPage(1)
   }
   const hasFilters = search || moduleFilter || roleFilter || dateFilter
 
@@ -141,18 +144,18 @@ export default function AuditLogsPage() {
           placeholder="Search by action, user, or target..."
           value={search} onChange={e => setSearch(e.target.value)}
         />
-        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={moduleFilter} onChange={e => setModuleFilter(e.target.value)}>
+        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={moduleFilter} onChange={e => { setModuleFilter(e.target.value); setPage(1) }}>
           <option value="">All Modules</option>
           {MODULES.map(m => <option key={m} value={m}>{m}</option>)}
         </select>
-        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={roleFilter} onChange={e => setRoleFilter(e.target.value)}>
+        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1) }}>
           <option value="">All Roles</option>
           {ROLE_GROUPS.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
         <input
           type="date"
           className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20"
-          value={dateFilter} onChange={e => setDateFilter(e.target.value)}
+          value={dateFilter} onChange={e => { setDateFilter(e.target.value); setPage(1) }}
         />
         {hasFilters && (
           <button onClick={clearFilters} className="bg-slate-100 text-slate-600 rounded-xl px-3 py-2.5 text-xs font-bold hover:bg-slate-200">

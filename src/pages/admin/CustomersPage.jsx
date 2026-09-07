@@ -37,11 +37,17 @@ function CustomerDetailModal({ cust, onClose, onToggleStatus }) {
 
   useEffect(() => {
     if (tab !== 'Booking History') return
-    setBookingsLoading(true)
-    getUserBookings(cust._id, { limit: 20 })
-      .then(data => setBookings(data.items || []))
-      .catch(() => setBookings([]))
-      .finally(() => setBookingsLoading(false))
+    (async () => {
+      setBookingsLoading(true)
+      try {
+        const data = await getUserBookings(cust._id, { limit: 20 })
+        setBookings(data.items || [])
+      } catch {
+        setBookings([])
+      } finally {
+        setBookingsLoading(false)
+      }
+    })()
   }, [tab, cust._id])
 
   const handleToggle = async () => {
@@ -166,7 +172,10 @@ export default function CustomersPage() {
   const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 350)
+    const t = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 350)
     return () => clearTimeout(t)
   }, [search])
 
@@ -188,9 +197,7 @@ export default function CustomersPage() {
       .finally(() => setLoading(false))
   }, [page, debouncedSearch, statusFilter])
 
-  useEffect(() => { loadCustomers() }, [loadCustomers])
-
-  useEffect(() => { setPage(1) }, [debouncedSearch, statusFilter])
+  useEffect(() => { (async () => { await loadCustomers() })() }, [loadCustomers])
 
   const handleToggleStatus = async (userId, isCurrentlyActive) => {
     if (isCurrentlyActive) await suspendUser(userId)
@@ -251,7 +258,7 @@ export default function CustomersPage() {
           placeholder="Search by name, username or phone..."
           value={search} onChange={e => setSearch(e.target.value)}
         />
-        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+        <select className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/20" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }}>
           <option value="">All Statuses</option>
           <option value="Active">Active</option>
           <option value="Suspended">Suspended</option>

@@ -15,7 +15,9 @@ export default function AdManagerLoginPage() {
   const [error, setError] = useState('')
   const set = k => e => setForm(p => ({ ...p, [k]: e.target.value }))
 
-  const canSubmit = form.username.trim().length >= 1 && form.password.length >= 1 && form.token.trim().length >= 1
+  // Token is only required the first time you log in after a purchase or
+  // renewal — the backend enforces that conditionally, so it's optional here.
+  const canSubmit = form.username.trim().length >= 1 && form.password.length >= 1
 
   const handleSubmit = async () => {
     if (!canSubmit || loading) return
@@ -68,7 +70,7 @@ export default function AdManagerLoginPage() {
       <div className="flex-1 flex items-center justify-center p-8 bg-white rounded-l-3xl">
         <div className="w-full max-w-sm">
           <h2 className="text-2xl font-black text-slate-800 mb-1">AdManager Login</h2>
-          <p className="text-slate-500 text-sm mb-8">Login with your business credentials and AdManager token</p>
+          <p className="text-slate-500 text-sm mb-8">Login with your business username and password — the AdManager token is only needed the first time.</p>
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-600 mb-1.5">Username</label>
@@ -92,7 +94,9 @@ export default function AdManagerLoginPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1.5">AdManager Token</label>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                AdManager Token <span className="font-normal text-slate-400">(only needed on your first login)</span>
+              </label>
               <input
                 placeholder="Paste the token from your dashboard"
                 value={form.token}
@@ -100,6 +104,9 @@ export default function AdManagerLoginPage() {
                 onKeyDown={e => e.key === 'Enter' && canSubmit && handleSubmit()}
                 className={INPUT}
               />
+              <p className="text-xs text-slate-400 mt-1.5">
+                Leave blank after your first successful login — just your username and password will work from then on.
+              </p>
             </div>
             {error && <p className="text-sm text-danger font-semibold">{error}</p>}
             <button

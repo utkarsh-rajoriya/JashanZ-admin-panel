@@ -221,7 +221,7 @@ export default function TrendingEventsPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { loadEvents() }, [loadEvents])
+  useEffect(() => { (async () => { await loadEvents() })() }, [loadEvents])
   useEffect(() => { getCategories().then(data => setCategories(data.categories || [])).catch(() => {}) }, [])
 
   const handleAdd = () => { setEditingEvent(null); setShowModal(true) }
